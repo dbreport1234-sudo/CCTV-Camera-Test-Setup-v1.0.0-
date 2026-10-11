@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CCTV Camera Test &amp; Setup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo"><i data-i="cctv" data-s="46"></i></div>
+    <div class="brand-text">
+      <h1>CCTV Camera Test &amp; Setup <small id="ver">(v1.0.0)</small></h1>
+      <p class="sub">โปรแกรมเช็คและตั้งค่ากล้อง IP สำหรับช่าง</p>
+      <p class="mini">รองรับกล้องรุ่นเก่า / Dahua / Hikvision / ONVIF / RTSP &nbsp;|&nbsp; ใช้ได้ทั้งกล้องที่หน้าเว็บเปิดไม่ได้</p>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="ready" id="readyPill"><span class="dot"></span><b id="readyText">พร้อมใช้งาน</b></div>
+    <div class="clock"><b id="clkTime">--:--:--</b><span id="clkDate">--/--/----</span></div>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ซ้าย -->
+  <aside class="left">
+    <section class="card connect">
+      <h2><i data-i="link-cam"></i> เชื่อมต่อกล้อง</h2>
+      <label for="ip">IP Address</label>
+      <div class="ip-row">
+        <input id="ip" placeholder="เช่น 192.168.1.100" autocomplete="off" spellcheck="false">
+        <button class="icon-btn" id="scanBtn" title="สแกนหากล้องในเครือข่าย"><i data-i="radar"></i></button>
+      </div>
+      <label for="user">ชื่อผู้ใช้ (Username)</label>
+      <input id="user" value="admin" autocomplete="off" spellcheck="false">
+      <label for="pass">รหัสผ่าน (Password)</label>
+      <div class="pw-row">
+        <input id="pass" type="password" autocomplete="off" spellcheck="false">
+        <button class="icon-btn flat" id="pwEye" title="แสดง/ซ่อนรหัสผ่าน" type="button"><i data-i="eye"></i></button>
+      </div>
+      <label for="stream">เลือกสตรีม</label>
+      <select id="stream">
+        <option value="main">Main Stream (เมน)</option>
+        <option value="sub">Sub Stream (ซับ)</option>
+      </select>
+
+      <details class="adv" id="adv">
+        <summary>ตัวเลือกเพิ่มเติม (ไม่จำเป็นต้องกรอก)</summary>
+        <div class="adv-grid">
+          <label>พอร์ต RTSP<input id="advPort" placeholder="อัตโนมัติ (554)" inputmode="numeric"></label>
+          <label>ช่อง (NVR)<input id="advCh" value="1" inputmode="numeric"></label>
+        </div>
+        <label>ยี่ห้อ
+          <select id="advBrand">
+            <option value="auto">ตรวจจับอัตโนมัติ</option>
+            <option value="dahua">Dahua / Amcrest / Imou</option>
+            <option value="hikvision">Hikvision / HiLook / EZVIZ</option>
+            <option value="uniview">Uniview</option>
+            <option value="tplink">TP-Link / Tapo</option>
+            <option value="reolink">Reolink</option>
+            <option value="axis">Axis</option>
+            <option value="hanwha">Hanwha / Samsung</option>
+            <option value="vivotek">Vivotek</option>
+            <option value="foscam">Foscam</option>
+            <option value="xm">Xiongmai (XM / กล้องจีนทั่วไป)</option>
+            <option value="bosch">Bosch</option>
+            <option value="panasonic">Panasonic</option>
+          </select>
+        </label>
+        <label>RTSP URL เอง (ถ้ารู้ — ปกติเว้นว่าง)
+          <input id="advUrl" placeholder="rtsp://user:pass@ip:554/..." spellcheck="false">
+        </label>
+      </details>
+
+      <button class="btn primary big" id="connectBtn"><i data-i="link"></i> <span id="connectLabel">เชื่อมต่อกล้อง</span></button>
+      <div class="conn-status" id="connStatus">
+        <div class="line" id="connLine1"><span class="dot idle"></span><span>ยังไม่ได้เชื่อมต่อ</span></div>
+        <div class="line sm" id="connLine2"><span class="ring"></span><span>ยี่ห้อ: -</span></div>
+      </div>
+    </section>
+
+    <section class="card cams">
+      <h2><i data-i="cams"></i> รายการกล้อง <small>(ที่บันทึกไว้)</small></h2>
+      <div class="search"><i data-i="search" data-s="16"></i><input id="camSearch" placeholder="ค้นหาชื่อกล้อง..."></div>
+      <div class="cam-list" id="camList"></div>
+      <div class="cam-actions">
+        <button class="btn green" id="addCamBtn"><i data-i="plus"></i> เพิ่มกล้อง</button>
+        <button class="btn dark" id="delCamBtn"><i data-i="trash"></i> ลบ</button>
+      </div>
+    </section>
+  </aside>
+
+  <!-- กลาง -->
+  <section class="center">
+    <div class="card viewer">
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="live">Live View</button>
+        <button class="tab" data-tab="ptz">การตั้งค่า PTZ</button>
+        <button class="tab" data-tab="files"><i data-i="film" data-s="16"></i> บันทึกภาพ/วิดีโอ</button>
+        <button class="tab" data-tab="settings"><i data-i="gear" data-s="16"></i> ตั้งค่ากล้อง</button>
+      </nav>
+
+      <div class="pane active" id="pane-live">
+        <div class="screen" id="screen">
+          <div class="cv-wrap" id="cvWrap"><canvas id="cv"></canvas></div>
+          <div class="ph" id="placeholder">
+            <i data-i="cctv" data-s="64"></i>
+            <b id="phTitle">ยังไม่ได้เชื่อมต่อกล้อง</b>
+            <span id="phText">กรอก IP / ชื่อผู้ใช้ / รหัสผ่าน แล้วกด “เชื่อมต่อกล้อง” — ระบบจะหา RTSP ให้เอง</span>
+          </div>
+          <div class="ov ov-title" id="ovTitle" hidden></div>
+          <div class="ov ov-time" id="ovTime" hidden></div>
+          <div class="ov ov-rec" id="ovRec" hidden><span class="rdot"></span> REC <b id="recTimer">00:00</b></div>
+        </div>
+        <div class="toolbar">
+          <button class="tb" id="tbAudio" title="เปิด/ปิดเสียง"><i data-i="vol-x"></i></button>
+          <button class="tb" id="tbSnap" title="จับภาพนิ่ง"><i data-i="camera"></i></button>
+          <button class="tb" id="tbRecord" title="เริ่ม/หยุดบันทึกวิดีโอ"><i data-i="video"></i></button>
+          <button class="tb rec" id="tbRecDot" title="เริ่ม/หยุดบันทึกวิดีโอ"><span class="rdot big"></span></button>
+          <button class="tb" id="tbFull" title="เต็มจอ"><i data-i="full"></i></button>
+          <span class="grow"></span>
+          <button class="tb zoom" id="tbZoom" title="ซูมดิจิทัล (หรือเลื่อนล้อเมาส์บนภาพ)">1x</button>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-ptz">
+        <div class="pane-body">
+          <h3>การตั้งค่า PTZ</h3>
+          <div class="form-grid">
+            <label>โปรโตคอลควบคุม
+              <select id="ptzMode">
+                <option value="auto">อัตโนมัติ (ตามยี่ห้อ แล้วลอง ONVIF)</option>
+                <option value="onvif">ONVIF</option>
+                <option value="dahua">Dahua (cgi-bin/ptz.cgi)</option>
+                <option value="hikvision">Hikvision (ISAPI)</option>
+              </select>
+            </label>
+            <label>ความเร็วหมุน: <b id="spdLabel2">4</b>
+              <input type="range" id="spd2" min="1" max="8" value="4">
+            </label>
+          </div>
+          <div class="btn-row">
+            <button class="btn dark" id="ptzTest"><i data-i="refresh"></i> ทดสอบ / โหลดรายการ Preset จากกล้อง</button>
+          </div>
+          <div id="ptzTestOut" class="note-box">ต่อกล้องแล้วกดปุ่มด้านบนเพื่อเช็คว่ากล้องตอบรับคำสั่ง PTZ หรือไม่</div>
+          <ul class="tips">
+            <li>กดค้างที่ปุ่มลูกศรเพื่อหมุน ปล่อยเพื่อหยุด (ระบบสั่งหยุดอัตโนมัติถ้าไม่มีการปล่อยภายใน 10 วินาที)</li>
+            <li>“ตั้งค่าตำแหน่ง” จะ<b>เขียนทับ</b> Preset เดิมในกล้อง — ระบบจะถามยืนยันก่อนทุกครั้ง</li>
+            <li>กล้องที่ไม่มีมอเตอร์ PTZ จะตอบว่าไม่รองรับ ซึ่งเป็นเรื่องปกติ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-files">
+        <div class="pane-body">
+          <div class="pane-head">
+            <h3>ไฟล์ที่บันทึกไว้ <small id="filesDir"></small></h3>
+            <div class="btn-row">
+              <button class="btn dark sm" id="openSnapDir"><i data-i="folder"></i> โฟลเดอร์ภาพ</button>
+              <button class="btn dark sm" id="openRecDir"><i data-i="folder"></i> โฟลเดอร์วิดีโอ</button>
+              <button class="btn dark sm" id="refreshFiles"><i data-i="refresh"></i></button>
+            </div>
+          </div>
+          <div class="files" id="filesGrid"></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-settings">
+        <div class="pane-body">
+          <h3>ข้อมูลการเชื่อมต่อ (ดึงจากกล้อง)</h3>
+          <div class="kv" id="setInfo"><span class="muted">ยังไม่ได้เชื่อมต่อกล้อง</span></div>
+          <div class="btn-row">
+            <button class="btn dark sm" id="copyMasked"><i data-i="copy"></i> คัดลอก RTSP URL (ซ่อนรหัส)</button>
+            <button class="btn dark sm" id="copyFull"><i data-i="copy"></i> คัดลอก RTSP URL (มีรหัสผ่าน — เอาไปเปิดใน VLC)</button>
+          </div>
+          <div id="streamsBox"></div>
+          <h3>ตั้งค่าโปรแกรม</h3>
+          <div class="form-grid">
+            <label>โฟลเดอร์เก็บภาพ/วิดีโอ<input id="setOut" spellcheck="false"></label>
+            <label>การส่งข้อมูล RTSP
+              <select id="setTransport">
+                <option value="auto">อัตโนมัติ (TCP แล้วสลับ UDP ถ้าไม่ติด)</option>
+                <option value="tcp">TCP (เสถียร แนะนำ)</option>
+                <option value="udp">UDP (กล้องเก่าบางรุ่น)</option>
+              </select>
+            </label>
+          </div>
+          <div class="btn-row"><button class="btn primary sm" id="saveSettings">บันทึกการตั้งค่า</button></div>
+          <p class="muted sm" id="aboutLine"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="tile" id="actSnap"><i data-i="camera" data-s="30"></i><span>จับภาพนิ่ง<br>(Snapshot)</span></button>
+      <button class="tile" id="actRec"><i data-i="video" data-s="30"></i><span class="reclbl">บันทึกวิดีโอ<br>(Record)</span><em class="rdot tiny" id="actRecDot" hidden></em></button>
+      <button class="tile" id="actAudio"><i data-i="mic" data-s="30"></i><span>เปิด/ปิดเสียง<br>(Audio)</span></button>
+      <button class="tile" id="actPtz"><i data-i="move" data-s="30"></i><span>ควบคุม PTZ<br>&nbsp;</span></button>
+      <button class="tile" id="actSettings"><i data-i="gear" data-s="30"></i><span>ตั้งค่ากล้อง<br>(ดึงจาก RTSP)</span></button>
+    </div>
+
+    <div class="lower">
+      <section class="card status">
+        <h2><i data-i="clock" data-s="18"></i> สถานะการทำงาน</h2>
+        <div class="log" id="log"></div>
+      </section>
+      <section class="card info">
+        <h2>ข้อมูลกล้อง</h2>
+        <dl id="infoList">
+          <dt>ยี่ห้อ :</dt><dd id="iBrand">-</dd>
+          <dt>รุ่น :</dt><dd id="iModel">-</dd>
+          <dt>ความละเอียด :</dt><dd id="iRes">-</dd>
+          <dt>FPS :</dt><dd id="iFps">-</dd>
+          <dt>Video Codec :</dt><dd id="iCodec">-</dd>
+          <dt>เสียง :</dt><dd id="iAudio">-</dd>
+          <dt>สถานะ :</dt><dd id="iState"><span class="dot idle"></span> ออฟไลน์</dd>
+        </dl>
+      </section>
+    </div>
+  </section>
+
+  <!-- ขวา -->
+  <aside class="right">
+    <section class="card ptz">
+      <h2><i data-i="ptz-ico"></i> PTZ Control</h2>
+      <div class="dpad">
+        <button class="d up" data-ptz="up"><i data-i="up" data-s="26"></i></button>
+        <button class="d left" data-ptz="left"><i data-i="left" data-s="26"></i></button>
+        <button class="d ok" id="ptzOk" title="หยุดการเคลื่อนที่">OK</button>
+        <button class="d right" data-ptz="right"><i data-i="right" data-s="26"></i></button>
+        <button class="d down" data-ptz="down"><i data-i="down" data-s="26"></i></button>
+      </div>
+      <div class="speed"><span>ความเร็ว</span><input type="range" id="spd" min="1" max="8" value="4"><b id="spdLabel">4</b></div>
+      <div class="lens-row"><span>Zoom</span><div><button class="sq" data-lens="zoom" data-dir="-1"><i data-i="minus"></i></button><button class="sq" data-lens="zoom" data-dir="1"><i data-i="plus"></i></button></div></div>
+      <div class="lens-row"><span>Focus</span><div><button class="sq" data-lens="focus" data-dir="-1"><i data-i="minus"></i></button><button class="sq" data-lens="focus" data-dir="1"><i data-i="plus"></i></button></div></div>
+      <div class="lens-row"><span>Iris</span><div><button class="sq" data-lens="iris" data-dir="-1"><i data-i="minus"></i></button><button class="sq" data-lens="iris" data-dir="1"><i data-i="plus"></i></button></div></div>
+      <hr>
+      <label class="lbl">Preset</label>
+      <select id="presetSel"></select>
+      <div class="two">
+        <button class="btn primary sm" id="presetGo">ไปที่ตำแหน่ง</button>
+        <button class="btn dark sm" id="presetSet">ตั้งค่าตำแหน่ง</button>
+      </div>
+      <hr>
+      <label class="lbl">Tour</label>
+      <select id="tourSel"><option value="1">Tour 1</option><option value="2">Tour 2</option><option value="3">Tour 3</option><option value="4">Tour 4</option></select>
+      <div class="two">
+        <button class="btn primary sm" id="tourGo">เริ่มทัวร์</button>
+        <button class="btn dark sm" id="tourStop">หยุด</button>
+      </div>
+    </section>
+  </aside>
+
+  <section class="card strip">
+    <h2><i data-i="film" data-s="18"></i> ภาพตัวอย่างจากกล้อง <small>(ล่าสุด)</small></h2>
+    <div class="thumbs" id="thumbs"></div>
+  </section>
+</main>
+
+<!-- สแกน -->
+<dialog id="scanDlg">
+  <div class="dlg-head"><h3><i data-i="radar"></i> สแกนหากล้องในเครือข่าย</h3><button class="x" id="scanClose">✕</button></div>
+  <div class="bar"><div class="bar-in" id="scanBar"></div></div>
+  <p class="muted sm" id="scanMsg">กำลังสแกน...</p>
+  <div class="scan-list" id="scanList"></div>
+  <p class="muted sm">ตรวจพอร์ตกล้องในวงแลนเดียวกับเครื่องนี้ + ONVIF Discovery (กล้องบางตัวอาจไม่ตอบ ให้พิมพ์ IP เอง)</p>
+</dialog>
+
+<!-- ตั้งชื่อกล้อง -->
+<dialog id="nameDlg">
+  <form method="dialog" id="nameForm">
+    <div class="dlg-head"><h3><i data-i="plus"></i> เพิ่มกล้องในรายการ</h3></div>
+    <label>ชื่อกล้อง<input id="nameInput" placeholder="เช่น ประตูหน้า" required maxlength="60"></label>
+    <p class="muted sm" id="nameHint"></p>
+    <div class="btn-row end"><button type="button" class="btn dark" id="nameCancel">ยกเลิก</button><button type="submit" class="btn green">บันทึก</button></div>
+  </form>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script src="/vendor/jsmpeg.js"></script>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
